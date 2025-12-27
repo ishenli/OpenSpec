@@ -2,6 +2,7 @@ import { ToolConfigurator } from './base.js';
 import { ClaudeConfigurator } from './claude.js';
 import { ClineConfigurator } from './cline.js';
 import { CodeBuddyConfigurator } from './codebuddy.js';
+import { CodeFuseConfigurator } from './codefuse.js';
 import { CostrictConfigurator } from './costrict.js';
 import { QoderConfigurator } from './qoder.js';
 import { IflowConfigurator } from './iflow.js';
@@ -15,6 +16,7 @@ export class ToolRegistry {
     const claudeConfigurator = new ClaudeConfigurator();
     const clineConfigurator = new ClineConfigurator();
     const codeBuddyConfigurator = new CodeBuddyConfigurator();
+    const codeFuseConfigurator = new CodeFuseConfigurator();
     const costrictConfigurator = new CostrictConfigurator();
     const qoderConfigurator = new QoderConfigurator();
     const iflowConfigurator = new IflowConfigurator();
@@ -24,6 +26,7 @@ export class ToolRegistry {
     this.tools.set('claude', claudeConfigurator);
     this.tools.set('cline', clineConfigurator);
     this.tools.set('codebuddy', codeBuddyConfigurator);
+    this.tools.set('codefuse', codeFuseConfigurator);
     this.tools.set('costrict', costrictConfigurator);
     this.tools.set('qoder', qoderConfigurator);
     this.tools.set('iflow', iflowConfigurator);

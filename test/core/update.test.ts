@@ -986,6 +986,84 @@ Old body
     await expect(FileSystemUtils.fileExists(codeBuddyArchive)).resolves.toBe(false);
   });
 
+  it('should refresh existing CodeFuse slash command files', async () => {
+    const codefusePath = path.join(
+      testDir,
+      '.codefuserules/workflows/openspec-proposal.md'
+    );
+    await fs.mkdir(path.dirname(codefusePath), { recursive: true });
+    const initialContent = `---
+name: OpenSpec: Proposal
+description: Old description
+category: OpenSpec
+tags: [openspec, change]
+---
+<!-- OPENSPEC:START -->
+Old slash content
+<!-- OPENSPEC:END -->`;
+    await fs.writeFile(codefusePath, initialContent);
+
+    const consoleSpy = vi.spyOn(console, 'log');
+
+    await updateCommand.execute(testDir);
+
+    const updated = await fs.readFile(codefusePath, 'utf-8');
+    expect(updated).toContain('name: OpenSpec: Proposal');
+    expect(updated).toContain('**Guardrails**');
+    expect(updated).toContain(
+      'Validate with `openspec validate <id> --strict`'
+    );
+    expect(updated).not.toContain('Old slash content');
+
+    const [logMessage] = consoleSpy.mock.calls[0];
+    expect(logMessage).toContain(
+      'Updated OpenSpec instructions (openspec/AGENTS.md'
+    );
+    expect(logMessage).toContain('AGENTS.md (created)');
+    expect(logMessage).toContain(
+      'Updated slash commands: .codefuserules/workflows/openspec-proposal.md'
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('should not create missing CodeFuse slash command files on update', async () => {
+    const codeFuseApply = path.join(
+      testDir,
+      '.codefuserules/workflows/openspec/apply.md'
+    );
+
+    // Only create apply; leave proposal and archive missing
+    await fs.mkdir(path.dirname(codeFuseApply), { recursive: true });
+    await fs.writeFile(
+      codeFuseApply,
+      `---
+name: OpenSpec: Apply
+description: Old description
+category: OpenSpec
+tags: [openspec, apply]
+---
+<!-- OPENSPEC:START -->
+Old body
+<!-- OPENSPEC:END -->`
+    );
+
+    await updateCommand.execute(testDir);
+
+    const codefuseProposal = path.join(
+      testDir,
+      '.codefuserules/workflows/openspec-proposal.md'
+    );
+    const codefuseArchive = path.join(
+      testDir,
+      '.codefuserules/workflows/openspec-archive.md'
+    );
+
+    // Confirm they weren't created by update
+    await expect(FileSystemUtils.fileExists(codefuseProposal)).resolves.toBe(false);
+    await expect(FileSystemUtils.fileExists(codefuseArchive)).resolves.toBe(false);
+  });
+
   it('should refresh existing Crush slash command files', async () => {
     const crushPath = path.join(
       testDir,

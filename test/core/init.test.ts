@@ -1184,6 +1184,97 @@ describe('InitCommand', () => {
       expect(updatedContent).toContain('Custom instructions here');
     });
 
+    // codefuse start
+    it('should create CodeFuse slash command files with templates', async () => {
+      queueSelections('codefuse', DONE);
+
+      await initCommand.execute(testDir);
+
+      const codefuseProposal = path.join(
+        testDir,
+        '.codefuserules/workflows/openspec/proposal.md'
+      );
+      const codefuseApply = path.join(
+        testDir,
+        '.codefuserules/workflows/openspec/apply.md'
+      );
+      const codefuseArchive = path.join(
+        testDir,
+        '.codefuserules/workflows/openspec/archive.md'
+      );
+
+      expect(await fileExists(codefuseProposal)).toBe(true);
+      expect(await fileExists(codefuseApply)).toBe(true);
+      expect(await fileExists(codefuseArchive)).toBe(true);
+
+      const proposalContent = await fs.readFile(codefuseProposal, 'utf-8');
+      expect(proposalContent).toContain('---');
+      expect(proposalContent).toContain('name: OpenSpec: Proposal');
+      expect(proposalContent).toContain('description: Scaffold a new OpenSpec change and validate strictly.');
+      expect(proposalContent).toContain('category: OpenSpec');
+      expect(proposalContent).toContain('<!-- OPENSPEC:START -->');
+      expect(proposalContent).toContain('**Guardrails**');
+
+      const applyContent = await fs.readFile(codefuseApply, 'utf-8');
+      expect(applyContent).toContain('---');
+      expect(applyContent).toContain('name: OpenSpec: Apply');
+      expect(applyContent).toContain('description: Implement an approved OpenSpec change and keep tasks in sync.');
+      expect(applyContent).toContain('Work through tasks sequentially');
+
+      const archiveContent = await fs.readFile(codefuseArchive, 'utf-8');
+      expect(archiveContent).toContain('---');
+      expect(archiveContent).toContain('name: OpenSpec: Archive');
+      expect(archiveContent).toContain('description: Archive a deployed OpenSpec change and update specs.');
+      expect(archiveContent).toContain('openspec archive <id> --yes');
+    });
+
+    it('should mark CodeFuse as already configured during extend mode', async () => {
+      queueSelections('codefuse', DONE, 'codefuse', DONE);
+      await initCommand.execute(testDir);
+      await initCommand.execute(testDir);
+
+      const secondRunArgs = mockPrompt.mock.calls[1][0];
+      const codeFuseChoice = secondRunArgs.choices.find(
+        (choice: any) => choice.value === 'codefuse'
+      );
+      expect(codeFuseChoice.configured).toBe(true);
+    });
+
+    it('should create CODEFUSE.md when CodeFuse is selected', async () => {
+      queueSelections('codefuse', DONE);
+
+      await initCommand.execute(testDir);
+
+      const codeFusePath = path.join(testDir, 'CODEFUSE.md');
+      expect(await fileExists(codeFusePath)).toBe(true);
+
+      const content = await fs.readFile(codeFusePath, 'utf-8');
+      expect(content).toContain('<!-- OPENSPEC:START -->');
+      expect(content).toContain("@/openspec/AGENTS.md");
+      expect(content).toContain('openspec update');
+      expect(content).toContain('<!-- OPENSPEC:END -->');
+    });
+
+    it('should update existing CODEFUSE.md with markers', async () => {
+      queueSelections('codefuse', DONE);
+
+      const codeFusePath = path.join(testDir, 'CODEFUSE.md');
+      const existingContent =
+        '# My CodeFuse Instructions\nCustom instructions here';
+      await fs.writeFile(codeFusePath, existingContent);
+
+      await initCommand.execute(testDir);
+
+      const updatedContent = await fs.readFile(codeFusePath, 'utf-8');
+      expect(updatedContent).toContain('<!-- OPENSPEC:START -->');
+      expect(updatedContent).toContain("@/openspec/AGENTS.md");
+      expect(updatedContent).toContain('openspec update');
+      expect(updatedContent).toContain('<!-- OPENSPEC:END -->');
+      expect(updatedContent).toContain('Custom instructions here');
+    });
+
+    // codefuse end
+
     it('should create Crush slash command files with templates', async () => {
       queueSelections('crush', DONE);
 
